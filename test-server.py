@@ -119,8 +119,7 @@ def handle_tcp_client(connection, client_address):
 
                 # Saves the information in a file locally
                 with open(f'information_{client_address[0]}.txt', 'a+') as info: #the mode is set to append and read, just in case we need to use the info again
-                    info.writelines(f"{client_address, average_energy_1_db, average_energy_2_db, client_average_energy_1_db, client_average_energy_2_db, start_time__tx_client, stop_time_tx_client, start_time_energy_client, 
-                                       stop_time_energy_client, start_time_energy_server, stop_time_energy_server, start_time_response_from_server, stop_time_response_from_server}\n")
+                    info.writelines(f"{client_address, average_energy_1_db, average_energy_2_db, client_average_energy_1_db, client_average_energy_2_db, start_time__tx_client, stop_time_tx_client, start_time_energy_client, stop_time_energy_client, start_time_energy_server, stop_time_energy_server, start_time_response_from_server, stop_time_response_from_server}\n")
                 break
     except Exception as e:
         print(f'TCP Client handling error for {client_address}: {e}')
