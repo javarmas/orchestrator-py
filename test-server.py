@@ -11,10 +11,10 @@ UDP_PORT = 8080
 TCP_PORT = 9090
 
 server_socket_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-server_socket_udp.bind((SERVER_IP, UDP_PORT))
+server_socket_udp.bind(('', UDP_PORT))
 
 server_socket_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket_tcp.bind((SERVER_IP, TCP_PORT))
+server_socket_tcp.bind(('', TCP_PORT))
 
 server_running = True
 client_files = {}
