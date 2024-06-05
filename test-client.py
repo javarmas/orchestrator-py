@@ -15,6 +15,8 @@ client_socket_tcp = None
 
 
 start_time_tx = None
+bin_name = ''
+wav_name = ''
 
 def initialize_sockets():
 	global client_socket_udp, client_socket_tcp
@@ -35,17 +37,17 @@ def calculate_energy(channel):
 	energy = np.mean(channel ** 2) #calculates energy summing the square of each sample
 	return np.sqrt(energy)	
 
-def send_command(command):
+def send_command(command,i):
 	global start_time_tx
 	try:
 		client_socket_tcp.sendall(command.encode())		
 		if command == 'streaming':
 			start_time_tx = time.time()	
-			record_audio()
+			record_audio(i)
 			
 		elif command == 'exit':
 			stop_time_tx = time.time()		
-			convert_raw_to_wav()
+			convert_raw_to_wav(i)
 			channel_1, channel_2 = separate_channels()
 		
 			if channel_1 is not None and channel_2 is not None:
@@ -82,14 +84,15 @@ def send_command(command):
 	except Exception as e:
 		print("Error: ", e)
 
-def record_audio():
+def record_audio(i):
+	global bin_name
 	try:
 		arecord_process = subprocess.Popen(['arecord', '-f', 'S16_LE', '-r', '44100', '-c', '2', '-t', 'raw', '-d', '11'], stdout=subprocess.PIPE, bufsize=32768)	
 		
 		while (time.time() - start_time_tx) <= 11:	
 			audio_data = arecord_process.stdout.read(32768)
-
-			with open('recorded_audio.bin', 'ab') as f: #saves the audio locally as raw data in a .bin file
+			bin_name = 'recorded_audio_' + str(i) + '.bin'
+			with open(bin_name, 'ab') as f: #saves the audio locally as raw data in a .bin file
 				f.write(audio_data)
 			client_socket_udp.sendto(audio_data, (SERVER_IP, UDP_PORT))
 		arecord_process.terminate()
@@ -98,12 +101,13 @@ def record_audio():
 		if arecord_process:
 			arecord_process.terminate()
 	
-def convert_raw_to_wav():
+def convert_raw_to_wav(i):
+	global wav_name
 	try:
-		with open('recorded_audio.bin', 'rb') as raw_file:
+		with open(bin_name, 'rb') as raw_file:
 			raw_data = raw_file.read()
-		
-		wav_file = wave.open('recorded_audio.wav', 'wb')
+		wav_name = bin_name.replace('.bin', '.wav')
+		wav_file = wave.open(wav_name, 'wb')
 		wav_file.setnchannels(2)
 		wav_file.setsampwidth(2)
 		wav_file.setframerate(44100)
@@ -114,7 +118,7 @@ def convert_raw_to_wav():
 
 def separate_channels():
 	try:		
-		wf = wave.open('recorded_audio.wav', 'rb')
+		wf = wave.open(wav_name, 'rb')
 		channels = wf.getnchannels()
 		bytes_per_frame = wf.getsampwidth() #sample width
 		sample_rate = wf.getframerate()
@@ -133,9 +137,9 @@ def separate_channels():
 		return None, None
 
 if __name__ == "__main__":
-	for i in range(100):
+	for i in range(10):
 		print("Execution: ", i+1)
 		initialize_sockets()
-		send_command("streaming")
-		send_command("exit")
-		time.sleep(3)
+		send_command("streaming",i)
+		send_command("exit",i)
+		time.sleep(1)
